@@ -1,0 +1,70 @@
+#! /usr/bin/python3
+
+# Copyright 2023 SUSE LLC
+#
+# This file is part of instance-billing-flavor-check
+#
+# instance-billing-flavor-check is free software: you can redistribute it and/or
+# modify it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# instance-billing-flavor-check is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License along with
+# instance-billing-flavor-check. If not, see <http://www.gnu.org/licenses/>.
+
+import argparse
+import logging
+import sys
+
+from instance_billing_flavor_check import frameworkfactory
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(
+    handlers=[
+        logging.StreamHandler(sys.stdout),
+        logging.FileHandler('instance-billing-flavor-check.log', mode='w'),
+    ],
+    level=logging.INFO,
+    format="%(message)s"
+)
+# either metadata comes as a param
+# or it needs to be fetched
+# get params if not fetched
+
+argparse = argparse.ArgumentParser(description='Check instance billing flavor')
+argparse.add_argument(
+    '--framework',
+    action='store_true',
+    dest='framework',
+    default=None,
+    required=True,
+    choices=['azure', 'ec2', 'gce'],
+    help='The framework to parse the metadata'
+)
+# is metadata provided or should it be fetched here
+argparse.add_argument(
+    '--metadata-path',
+    action='store_true',
+    dest='metadata_path',
+    default=None,
+    required=True,
+    help='The instance metadata'
+)
+
+args = argparse.parse_args()
+try:
+    instance_flavor = frameworkfactory.instance_flavor_check(
+        args.framework,
+        args.metadata_path
+    )
+    logger.info(instance_flavor)
+except KeyError as err:
+    logger.error('Determining instance billing type failed: {}'.format(err))
+    sys.exit(1)
+
+sys.exit(0)
