@@ -91,3 +91,35 @@ def check_payg_byos():
     if not rmt_ip_addr:
         logger.warning('Instance can be either BYOS or PAYG and not registered')
         sys.exit(0)
+
+    instance_check_url = f"https://{rmt_ip_addr}/api/instance/check"
+    requests.packages.urllib3.disable_warnings(
+        requests.packages.urllib3.exceptions.InsecureRequestWarning
+    )
+    message = None
+    try:
+        response = requests.get(
+            instance_check_url,
+            timeout=2,
+            verify=False,
+            metadata=metadata,
+            identifer=identifier
+        )
+    except requests.exceptions.HTTPError as err:
+        message = f"Http Error:{err}"
+    except requests.exceptions.ConnectionError as err:
+        message = f"Error Connecting:{err}"
+    except requests.exceptions.Timeout as err:
+        message = f"Timeout Error:{err}"
+    except requests.exceptions.RequestException as err:
+        message = f"Unexpected error:{err}"
+
+    if message:
+        logger.error(message)
+        sys.exit(1)
+    if response.status_code == 200:
+        result = response.json()
+        logger.debug(result)
+        return result.get('state')
+
+    logger.error("Request to check if instance is PAYG/BYOS failed: %s", response.text)
