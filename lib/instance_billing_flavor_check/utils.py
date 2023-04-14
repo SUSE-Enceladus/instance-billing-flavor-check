@@ -71,8 +71,23 @@ def get_identifier():
         os_release = dict(csv_reader)
     return os_release.get('NAME')
 
+def get_rmt_ip_addr():
+    """ Return the RMT update server IP the instance is registered to."""
+    with open(ETC_HOSTS_PATH) as etc_hosts:
+        etc_hosts_lines = etc_hosts.readlines()
+
+    for etc_hosts_line in etc_hosts_lines:
+        if 'susecloud.net' in etc_hosts_line:
+            return etc_hosts_line.split('\t')[0]
 
 def check_payg_byos():
     """Return 'PAYG' OR 'BYOS'."""
     metadata = get_metadata()
     identifier = get_identifier()
+    if not metadata or not identifier:
+        sys.exit(1)
+
+    rmt_ip_addr = get_rmt_ip_addr()
+    if not rmt_ip_addr:
+        logger.warning('Instance can be either BYOS or PAYG and not registered')
+        sys.exit(0)
