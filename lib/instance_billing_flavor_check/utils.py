@@ -52,7 +52,20 @@ def get_command():
 
 
 
+def get_metadata():
+    command = get_command()
+    if not command:
+        return None
+
+    command = command.split(' ')
+    result = Command.run(command)
+    if result.returncode == 0:
+        return result.output
+    else:
+        logger.error("Could not fetch the metadata after running %s: with status %s", result.error, result.returncode)
+        return None
+
 
 def check_payg_byos():
     """Return 'PAYG' OR 'BYOS'."""
-    pass
+    metadata = get_metadata()
