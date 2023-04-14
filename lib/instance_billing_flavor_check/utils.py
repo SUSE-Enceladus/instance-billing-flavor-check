@@ -65,7 +65,14 @@ def get_metadata():
         logger.error("Could not fetch the metadata after running %s: with status %s", result.error, result.returncode)
         return None
 
+def get_identifier():
+    with open(ETC_OS_RELEASE_PATH) as stream:
+        csv_reader = csv.reader(stream, delimiter="=")
+        os_release = dict(csv_reader)
+    return os_release.get('NAME')
+
 
 def check_payg_byos():
     """Return 'PAYG' OR 'BYOS'."""
     metadata = get_metadata()
+    identifier = get_identifier()
