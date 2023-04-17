@@ -62,19 +62,33 @@ def get_metadata():
     if result.returncode == 0:
         return result.output
     else:
-        logger.error("Could not fetch the metadata after running %s: with status %s", result.error, result.returncode)
+        logger.error(
+            "Could not fetch the metadata after running the command '%s': '%s' with status '%s'",
+            ' '.join(command),
+            result.error,
+            result.returncode
+        )
         return None
 
 def get_identifier():
-    with open(ETC_OS_RELEASE_PATH) as stream:
-        csv_reader = csv.reader(stream, delimiter="=")
-        os_release = dict(csv_reader)
+    try:
+        with open(ETC_OS_RELEASE_PATH) as stream:
+            csv_reader = csv.reader(stream, delimiter="=")
+            os_release = dict(csv_reader)
+    except FileNotFoundError:
+        logger.error("Could not open '%s' file", ETC_RELEASE_PATH)
+        syst.exit(1)
+
     return os_release.get('NAME')
 
 def get_rmt_ip_addr():
     """ Return the RMT update server IP the instance is registered to."""
-    with open(ETC_HOSTS_PATH) as etc_hosts:
-        etc_hosts_lines = etc_hosts.readlines()
+    try:
+        with open(ETC_HOSTS_PATH) as etc_hosts:
+            etc_hosts_lines = etc_hosts.readlines()
+    except FileNotFoundError:
+        logger.error("Could not open '%s' file", ETC_HOSTS_PATH)
+        syst.exit(1)
 
     for etc_hosts_line in etc_hosts_lines:
         if 'susecloud.net' in etc_hosts_line:
