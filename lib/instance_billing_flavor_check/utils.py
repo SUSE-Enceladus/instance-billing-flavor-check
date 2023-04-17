@@ -80,18 +80,8 @@ def get_rmt_ip_addr():
         if 'susecloud.net' in etc_hosts_line:
             return etc_hosts_line.split('\t')[0]
 
-def check_payg_byos():
-    """Return 'PAYG' OR 'BYOS'."""
-    metadata = get_metadata()
-    identifier = get_identifier()
-    if not metadata or not identifier:
-        sys.exit(1)
 
-    rmt_ip_addr = get_rmt_ip_addr()
-    if not rmt_ip_addr:
-        logger.warning('Instance can be either BYOS or PAYG and not registered')
-        sys.exit(0)
-
+def make_request(rmtt_ip_addr, metadata, identifier):
     instance_check_url = f"https://{rmt_ip_addr}/api/instance/check"
     requests.packages.urllib3.disable_warnings(
         requests.packages.urllib3.exceptions.InsecureRequestWarning
@@ -122,4 +112,20 @@ def check_payg_byos():
         logger.debug(result)
         return result.get('state')
 
-    logger.error("Request to check if instance is PAYG/BYOS failed: %s", response.text)
+    logger.error(
+        'Request to check if instance is PAYG/BYOS failed: %s', response.text
+    )
+
+def check_payg_byos():
+    """Return 'PAYG' OR 'BYOS'."""
+    metadata = get_metadata()
+    identifier = get_identifier()
+    if not metadata or not identifier:
+        sys.exit(1)
+
+    rmt_ip_addr = get_rmt_ip_addr()
+    if not rmt_ip_addr:
+        logger.warning('Instance can be either BYOS or PAYG and not registered')
+        sys.exit(0)
+
+    return make_request(rmtt_ip_addr, metadata, identifier)
