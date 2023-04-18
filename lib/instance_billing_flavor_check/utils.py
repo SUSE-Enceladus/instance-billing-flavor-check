@@ -93,7 +93,7 @@ def get_rmt_ip_addr():
             return etc_hosts_line.split('\t')[0]
 
 
-def make_request(rmtt_ip_addr, metadata, identifier):
+def make_request(rmt_ip_addr, metadata, identifier):
     instance_check_url = f"https://{rmt_ip_addr}/api/instance/check"
     requests.packages.urllib3.disable_warnings(
         requests.packages.urllib3.exceptions.InsecureRequestWarning
@@ -139,4 +139,4 @@ def check_payg_byos():
     if not rmt_ip_addr:
         logger.warning('Instance can be either BYOS or PAYG and not registered')
 
-    return make_request(rmtt_ip_addr, metadata, identifier)
+    return make_request(rmt_ip_addr, metadata, identifier)
