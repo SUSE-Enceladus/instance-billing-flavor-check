@@ -37,7 +37,7 @@ logging.basicConfig(
     format="%(message)s"
 )
 
-def get_command():
+def get_instance_data_command():
     config = configparser.ConfigParser()
     if config.read(REGION_SRV_CLIENT_PATH):
         try:
