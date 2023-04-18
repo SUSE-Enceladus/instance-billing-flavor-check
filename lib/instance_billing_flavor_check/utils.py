@@ -23,7 +23,7 @@ import requests
 
 from instance_billing_flavor_check.command import Command
 
-REGION_SRV_CLIENT_PATH = '/etc/regionserverclnt.cfg'
+REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
 ETC_OS_RELEASE_PATH = '/etc/os-release'
 ETC_HOSTS_PATH = '/etc/hosts'
 
@@ -39,13 +39,13 @@ logging.basicConfig(
 
 def get_instance_data_command():
     config = configparser.ConfigParser()
-    if config.read(REGION_SRV_CLIENT_PATH):
+    if config.read(REGION_SRV_CLIENT_CONFIG_PATH):
         try:
             return config['instance']['dataProvider']
         except Exception as err:
-            logger.error("Could not parse %s: %s", REGION_SRV_CLIENT_PATH, err)
+            logger.error("Could not parse %s: %s", REGION_SRV_CLIENT_CONFIG_PATH, err)
     else:
-        logger.error("Could not read file %s", REGION_SRV_CLIENT_PATH)
+        logger.error("Could not read file %s", REGION_SRV_CLIENT_CONFIG_PATH)
     return None
 
 
