@@ -1,5 +1,3 @@
-#! /usr/bin/python3
-
 # Copyright 2023 SUSE LLC
 #
 # This file is part of instance-billing-flavor-check
@@ -124,7 +122,7 @@ def make_request(rmtt_ip_addr, metadata, identifier):
     if response.status_code == 200:
         result = response.json()
         logger.debug(result)
-        return result.get('state')
+        return result.get('flavor')
 
     logger.error(
         'Request to check if instance is PAYG/BYOS failed: %s', response.text
