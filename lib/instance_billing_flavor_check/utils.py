@@ -125,7 +125,7 @@ def make_request(rmtt_ip_addr, metadata, identifier):
         return result.get('flavor')
 
     logger.error(
-        'Request to check if instance is PAYG/BYOS failed: %s', response.text
+        'Request to check if instance is PAYG/BYOS failed: %s', response.reason
     )
 
 def check_payg_byos():
