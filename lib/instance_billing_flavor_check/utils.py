@@ -86,7 +86,7 @@ def get_rmt_ip_addr():
             etc_hosts_lines = etc_hosts.readlines()
     except FileNotFoundError:
         logger.error("Could not open '%s' file", ETC_HOSTS_PATH)
-        syst.exit(1)
+        return
 
     for etc_hosts_line in etc_hosts_lines:
         if 'susecloud.net' in etc_hosts_line:
@@ -118,7 +118,7 @@ def make_request(rmtt_ip_addr, metadata, identifier):
 
     if message:
         logger.error(message)
-        sys.exit(1)
+        return
     if response.status_code == 200:
         result = response.json()
         logger.debug(result)
@@ -133,11 +133,10 @@ def check_payg_byos():
     metadata = get_metadata()
     identifier = get_identifier()
     if not metadata or not identifier:
-        sys.exit(1)
+        return
 
     rmt_ip_addr = get_rmt_ip_addr()
     if not rmt_ip_addr:
         logger.warning('Instance can be either BYOS or PAYG and not registered')
-        sys.exit(0)
 
     return make_request(rmtt_ip_addr, metadata, identifier)
