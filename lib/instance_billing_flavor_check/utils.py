@@ -37,52 +37,54 @@ logging.basicConfig(
     format="%(message)s"
 )
 
+
 def get_instance_data_command():
     config = configparser.ConfigParser()
     if config.read(REGION_SRV_CLIENT_CONFIG_PATH):
         try:
             return config['instance']['dataProvider']
         except Exception as err:
-            logger.error("Could not parse %s: %s", REGION_SRV_CLIENT_CONFIG_PATH, err)
+            logger.error(
+                "Could not parse %s: %s", REGION_SRV_CLIENT_CONFIG_PATH, err
+            )
     else:
         logger.error("Could not read file %s", REGION_SRV_CLIENT_CONFIG_PATH)
-    return None
-
 
 
 def get_metadata():
-    command = get_command()
+    """Return instance metadata."""
+    command = get_instance_data_command()
     if not command:
-        return None
+        return
 
     command = command.split(' ')
     result = Command.run(command)
     if result.returncode == 0:
         return result.output
-    else:
-        logger.error(
-            "Could not fetch the metadata after running the command '%s': '%s' with status '%s'",
-            ' '.join(command),
-            result.error,
-            result.returncode
-        )
-        return None
+
+    logger.error(
+        "Could not fetch the metadata after running the command '%s': '%s' with status '%s'",
+        ' '.join(command),
+        result.error,
+        result.returncode
+    )
+
 
 def get_identifier():
+    """Return the identifier found in /etc/os-release."""
     try:
-        with open(ETC_OS_RELEASE_PATH) as stream:
+        with open(ETC_OS_RELEASE_PATH, encoding='utf-8') as stream:
             csv_reader = csv.reader(stream, delimiter="=")
             os_release = dict(csv_reader)
+        return os_release.get('NAME')
     except FileNotFoundError:
-        logger.error("Could not open '%s' file", ETC_RELEASE_PATH)
-        syst.exit(1)
+        logger.error("Could not open '%s' file", ETC_OS_RELEASE_PATH)
 
-    return os_release.get('NAME')
 
 def get_rmt_ip_addr():
-    """ Return the RMT update server IP the instance is registered to."""
+    """Return the RMT update server IP the instance is registered to."""
     try:
-        with open(ETC_HOSTS_PATH) as etc_hosts:
+        with open(ETC_HOSTS_PATH, encoding='utf-8') as etc_hosts:
             etc_hosts_lines = etc_hosts.readlines()
     except FileNotFoundError:
         logger.error("Could not open '%s' file", ETC_HOSTS_PATH)
@@ -94,6 +96,7 @@ def get_rmt_ip_addr():
 
 
 def make_request(rmt_ip_addr, metadata, identifier):
+    """Return the flavour from the RMT server request."""
     instance_check_url = f"https://{rmt_ip_addr}/api/instance/check"
     requests.packages.urllib3.disable_warnings(
         requests.packages.urllib3.exceptions.InsecureRequestWarning
@@ -118,7 +121,8 @@ def make_request(rmt_ip_addr, metadata, identifier):
 
     if message:
         logger.error(message)
-        return
+        sys.exit(12)
+
     if response.status_code == 200:
         result = response.json()
         logger.debug(result)
@@ -127,16 +131,29 @@ def make_request(rmt_ip_addr, metadata, identifier):
     logger.error(
         'Request to check if instance is PAYG/BYOS failed: %s', response.reason
     )
+    sys.exit(12)
 
 def check_payg_byos():
-    """Return 'PAYG' OR 'BYOS'."""
+    """
+    Return 'PAYG' OR 'BYOS'
+
+    Instead of returning a string, this method returns
+    a exit code as follows:
+    - 10 -> PAYG
+    - 11 -> BYOS
+    - 12 -> Unknown
+    """
     metadata = get_metadata()
     identifier = get_identifier()
     if not metadata or not identifier:
-        return
+        sys.exit(12)
 
     rmt_ip_addr = get_rmt_ip_addr()
     if not rmt_ip_addr:
         logger.warning('Instance can be either BYOS or PAYG and not registered')
+        sys.exit(12)
 
-    return make_request(rmt_ip_addr, metadata, identifier)
+    code_flavour = {'PAYG': 10, 'BYOS': 11}
+    flavour = make_request(rmt_ip_addr, metadata, identifier)
+    logger.info(flavour)
+    sys.exit(code_flavour.get(flavour))
