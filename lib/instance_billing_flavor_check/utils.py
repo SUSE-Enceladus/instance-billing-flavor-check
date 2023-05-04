@@ -22,6 +22,7 @@ import sys
 import requests
 
 from instance_billing_flavor_check.command import Command
+from cloudregister.registerutils import get_smt
 
 REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
 ETC_OS_RELEASE_PATH = '/etc/os-release'
@@ -93,6 +94,9 @@ def get_rmt_ip_addr():
     for etc_hosts_line in etc_hosts_lines:
         if 'susecloud.net' in etc_hosts_line:
             return etc_hosts_line.split('\t')[0]
+
+    server = get_smt(False)
+    return server.get_ipv4()
 
 
 def make_request(rmt_ip_addr, metadata, identifier):
