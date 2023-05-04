@@ -17,12 +17,14 @@
 
 import csv
 import configparser
+import ipaddress
 import logging
 import sys
 import requests
 
-from instance_billing_flavor_check.command import Command
 from cloudregister.registerutils import get_smt
+from instance_billing_flavor_check.command import Command
+from ipaddress import IPv4Address, IPv6Address
 
 REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
 ETC_OS_RELEASE_PATH = '/etc/os-release'
@@ -101,7 +103,16 @@ def get_rmt_ip_addr():
 
 def make_request(rmt_ip_addr, metadata, identifier):
     """Return the flavour from the RMT server request."""
-    instance_check_url = f"https://{rmt_ip_addr}/api/instance/check"
+    instance_check_url = None
+    try:
+        if isinstance(ipaddress.ip_address(rmt_ip_addr), ipaddress.IPv4Address):
+            instance_check_url = f"https://{rmt_ip_addr}/api/instance/check"
+        elif isinstance(ipaddress.ip_address(rmt_ip_addr), ipaddress.IPv6Address):
+            instance_check_url = f"https://[{rmt_ip_addr}]/api/instance/check"
+    except ValueError as err:
+        logger.error(err)
+        sys.exit(12)
+
     requests.packages.urllib3.disable_warnings(
         requests.packages.urllib3.exceptions.InsecureRequestWarning
     )
