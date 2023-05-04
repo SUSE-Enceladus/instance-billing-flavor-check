@@ -36,16 +36,17 @@ logging.basicConfig(
 try:
     from cloudregister.registerutils import get_smt
 except ModuleNotFoundError as err:
-    logger.error(err)
-    logger.info('Please, make sure the package "cloud-regionsrv-client" is installed')
-    sys.exit(12)
-
+    pass
 
 REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
 ETC_OS_RELEASE_PATH = '/etc/os-release'
 ETC_HOSTS_PATH = '/etc/hosts'
 
+requests.packages.urllib3.disable_warnings(
+    requests.packages.urllib3.exceptions.InsecureRequestWarning
+)
 
+ 
 def get_instance_data_command():
     config = configparser.ConfigParser()
     if config.read(REGION_SRV_CLIENT_CONFIG_PATH):
@@ -102,6 +103,16 @@ def get_rmt_ip_addr():
         if 'susecloud.net' in etc_hosts_line:
             return etc_hosts_line.split('\t')[0]
 
+    if 'cloudregister' in sys.modules:
+        server = get_smt(False)
+        return server.get_ipv4()
+    else:
+        logger.info(
+            'No cloudregister module present, '
+            'can not determine a valid IP address'
+        )
+        sys.exit(12)
+
     server = get_smt(False)
     return server.get_ipv4()
 
@@ -118,9 +129,6 @@ def make_request(rmt_ip_addr, metadata, identifier):
         logger.error(error)
         sys.exit(12)
 
-    requests.packages.urllib3.disable_warnings(
-        requests.packages.urllib3.exceptions.InsecureRequestWarning
-    )
     message = None
     try:
         response = requests.get(
