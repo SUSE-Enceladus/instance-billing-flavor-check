@@ -19,4 +19,4 @@
 
 from instance_billing_flavor_check.utils import check_payg_byos
 
-print(check_payg_byos())
+check_payg_byos()
