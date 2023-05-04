@@ -22,13 +22,7 @@ import logging
 import sys
 import requests
 
-from cloudregister.registerutils import get_smt
 from instance_billing_flavor_check.command import Command
-from ipaddress import IPv4Address, IPv6Address
-
-REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
-ETC_OS_RELEASE_PATH = '/etc/os-release'
-ETC_HOSTS_PATH = '/etc/hosts'
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -39,6 +33,17 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(message)s"
 )
+try:
+    from cloudregister.registerutils import get_smt
+except ModuleNotFoundError as err:
+    logger.error(err)
+    logger.info('Please, make sure the package "cloud-regionsrv-client" is installed')
+    sys.exit(12)
+
+
+REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
+ETC_OS_RELEASE_PATH = '/etc/os-release'
+ETC_HOSTS_PATH = '/etc/hosts'
 
 
 def get_instance_data_command():
@@ -109,8 +114,8 @@ def make_request(rmt_ip_addr, metadata, identifier):
             instance_check_url = f"https://{rmt_ip_addr}/api/instance/check"
         elif isinstance(ipaddress.ip_address(rmt_ip_addr), ipaddress.IPv6Address):
             instance_check_url = f"https://[{rmt_ip_addr}]/api/instance/check"
-    except ValueError as err:
-        logger.error(err)
+    except ValueError as error:
+        logger.error(error)
         sys.exit(12)
 
     requests.packages.urllib3.disable_warnings(
