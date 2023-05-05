@@ -107,10 +107,7 @@ def get_rmt_ip_addr():
         server = get_smt(False)
         return server.get_ipv4()
     else:
-        logger.info(
-            'No cloudregister module present, '
-            'can not determine a valid IP address'
-        )
+        logger.info('Could not determine update server IP address')
         sys.exit(12)
 
 
