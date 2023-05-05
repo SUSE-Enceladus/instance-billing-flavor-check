@@ -113,9 +113,6 @@ def get_rmt_ip_addr():
         )
         sys.exit(12)
 
-    server = get_smt(False)
-    return server.get_ipv4()
-
 
 def make_request(rmt_ip_addr, metadata, identifier):
     """Return the flavour from the RMT server request."""
