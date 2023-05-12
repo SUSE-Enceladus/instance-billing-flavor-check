@@ -17,7 +17,6 @@
 
 import csv
 import configparser
-import ipaddress
 import logging
 import sys
 import requests
@@ -99,30 +98,26 @@ def get_rmt_ip_addr():
         logger.error("Could not open '%s' file", ETC_HOSTS_PATH)
         return
 
+    # use present RMT server IP first if registered
     for etc_hosts_line in etc_hosts_lines:
         if 'susecloud.net' in etc_hosts_line:
             return etc_hosts_line.split('\t')[0]
 
     if 'cloudregister' in sys.modules:
+        # get a new RMT IP
         server = get_smt(False)
-        return server.get_ipv4()
-    else:
-        logger.info('Could not determine update server IP address')
-        sys.exit(12)
+        rmt_ips_addr = []
+        if server.get_ipv6():
+            rmt_ips_addr.append('[{}]'.format(server.get_ipv6()))
+        rmt_ips_addr.append(server.get_ipv4())
+        return rmt_ips_addr
+
+    logger.info('Could not determine update server IP address')
 
 
 def make_request(rmt_ip_addr, metadata, identifier):
     """Return the flavour from the RMT server request."""
-    instance_check_url = None
-    try:
-        if isinstance(ipaddress.ip_address(rmt_ip_addr), ipaddress.IPv4Address):
-            instance_check_url = f"https://{rmt_ip_addr}/api/instance/check"
-        elif isinstance(ipaddress.ip_address(rmt_ip_addr), ipaddress.IPv6Address):
-            instance_check_url = f"https://[{rmt_ip_addr}]/api/instance/check"
-    except ValueError as error:
-        logger.error(error)
-        sys.exit(12)
-
+    instance_check_url = f"https://{rmt_ip_addr}/api/instance/check"
     message = None
     try:
         response = requests.get(
@@ -143,7 +138,7 @@ def make_request(rmt_ip_addr, metadata, identifier):
 
     if message:
         logger.error(message)
-        sys.exit(12)
+        return
 
     if response.status_code == 200:
         result = response.json()
@@ -153,7 +148,7 @@ def make_request(rmt_ip_addr, metadata, identifier):
     logger.error(
         'Request to check if instance is PAYG/BYOS failed: %s', response.reason
     )
-    sys.exit(12)
+
 
 def check_payg_byos():
     """
@@ -170,12 +165,15 @@ def check_payg_byos():
     if not metadata or not identifier:
         sys.exit(12)
 
-    rmt_ip_addr = get_rmt_ip_addr()
-    if not rmt_ip_addr:
+    rmt_ips_addr = get_rmt_ip_addr()
+    if not rmt_ips_addr:
         logger.warning('Instance can be either BYOS or PAYG and not registered')
         sys.exit(12)
 
     code_flavour = {'PAYG': 10, 'BYOS': 11}
-    flavour = make_request(rmt_ip_addr, metadata, identifier)
-    logger.info(flavour)
-    sys.exit(code_flavour.get(flavour))
+    for rmt_ip_addr in rmt_ips_addr:
+        flavour = make_request(rmt_ip_addr, metadata, identifier)
+        if flavour:
+            logger.info(flavour)
+            sys.exit(code_flavour.get(flavour))
+    sys.exit(12)
