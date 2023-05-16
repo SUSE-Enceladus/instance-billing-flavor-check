@@ -117,7 +117,7 @@ def get_rmt_ip_addr():
 
 def make_request(rmt_ip_addr, metadata, identifier):
     """Return the flavour from the RMT server request."""
-    instance_check_url = f"https://{rmt_ip_addr}/api/instance/check"
+    instance_check_url = 'https://{}/api/instance/check'.format(rmt_ip_addr)
     message = None
     try:
         response = requests.get(
@@ -128,13 +128,13 @@ def make_request(rmt_ip_addr, metadata, identifier):
             identifer=identifier
         )
     except requests.exceptions.HTTPError as err:
-        message = f"Http Error:{err}"
+        message = 'Http Error:{}'.format(err)
     except requests.exceptions.ConnectionError as err:
-        message = f"Error Connecting:{err}"
+        message = 'Error Connecting:{}'.format(err)
     except requests.exceptions.Timeout as err:
-        message = f"Timeout Error:{err}"
+        message = 'Timeout Error:{}'.format(err)
     except requests.exceptions.RequestException as err:
-        message = f"Unexpected error:{err}"
+        message = 'Unexpected error:{}'.format(err)
 
     if message:
         logger.error(message)
