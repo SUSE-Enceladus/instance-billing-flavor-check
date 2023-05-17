@@ -22,6 +22,7 @@ import sys
 import requests
 
 from instance_billing_flavor_check.command import Command
+from lxml import etree
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -38,7 +39,7 @@ except ModuleNotFoundError as err:
     pass
 
 REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
-ETC_OS_RELEASE_PATH = '/etc/os-release'
+BASEPRODUCT_PATH = '/etc/products.d/baseproduct'
 ETC_HOSTS_PATH = '/etc/hosts'
 
 requests.packages.urllib3.disable_warnings(
@@ -79,14 +80,16 @@ def get_metadata():
 
 
 def get_identifier():
-    """Return the identifier found in /etc/os-release."""
+    """Return the identifier found in /etc/products.d/baseproduct."""
     try:
-        with open(ETC_OS_RELEASE_PATH, encoding='utf-8') as stream:
-            csv_reader = csv.reader(stream, delimiter="=")
-            os_release = dict(csv_reader)
-        return os_release.get('NAME')
+        with open(BASEPRODUCT_PATH, encoding='utf-8') as stream:
+            base_prod_xml = stream.read()
+            prod_def_start = base_prod_xml.index('<product')
+            product_tree = etree.fromstring(base_prod_xml[prod_def_start:])
+
+        return product_tree.find('name').text.lower()
     except FileNotFoundError:
-        logger.error("Could not open '%s' file", ETC_OS_RELEASE_PATH)
+        logger.error("Could not open '%s' file", BASEPRODUCT_PATH)
 
 
 def get_rmt_ip_addr():
