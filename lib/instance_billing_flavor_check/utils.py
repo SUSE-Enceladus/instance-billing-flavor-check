@@ -122,13 +122,16 @@ def make_request(rmt_ip_addr, metadata, identifier):
     """Return the flavour from the RMT server request."""
     instance_check_url = 'https://{}/api/instance/check'.format(rmt_ip_addr)
     message = None
+    billing_check_params = {
+        'metadata': metadata,
+        'identifier': identifier
+    }
     try:
         response = requests.get(
             instance_check_url,
             timeout=2,
             verify=False,
-            metadata=metadata,
-            identifer=identifier
+            params=billing_check_params
         )
     except requests.exceptions.HTTPError as err:
         message = 'Http Error:{}'.format(err)
