@@ -43,9 +43,6 @@ python3 setup.py build
 python3 setup.py install --prefix=%{_prefix}  --root=%{buildroot}
 mkdir -p %{buildroot}%{python3_sitelib}/instance_flavor_check
 
-cp -r lib/*.py %{buildroot}%{python3_sitelib}/instance_flavor_check/
-cp instance-flavor-check %{buildroot}%{_sbindir}/instance-flavor-check
-
 %files
 %defattr(-,root,root,-)
 %doc README.md
