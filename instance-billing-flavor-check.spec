@@ -24,6 +24,7 @@ URL:            https://github.com/SUSE-Enceladus/instance-billing-flavor-check
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-roo
 Requires:       python3
+Requires:       python3-lxml
 Requires:       python3-requests
 BuildRequires:  python3-setuptools
 BuildRequires:  python-rpm-macros
