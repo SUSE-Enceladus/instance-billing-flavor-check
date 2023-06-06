@@ -15,7 +15,7 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 Summary:        Cloud Billing Flavour Check
-Name:           instance-billing-type-check
+Name:           python-instance-billing-type-check
 Version:        0.0.1
 Release:        0
 License:        GPL3.0-only
@@ -29,6 +29,7 @@ Requires:       python3-requests
 BuildRequires:  python3-setuptools
 BuildRequires:  python-rpm-macros
 
+%python_subpackages
 
 %description
 Check if instance is PAYG or BYOS
@@ -37,10 +38,11 @@ Check if instance is PAYG or BYOS
 %setup -q
 
 %build
-python3 setup.py build
+# Build Python 3 version
+%python_build
 
 %install
-python3 setup.py install --prefix=%{_prefix}  --root=%{buildroot}
+%python_install
 mkdir -p %{buildroot}%{python3_sitelib}/instance_flavor_check
 
 %files
