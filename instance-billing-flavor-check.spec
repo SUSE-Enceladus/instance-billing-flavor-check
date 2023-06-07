@@ -28,6 +28,7 @@ Requires:       python3-lxml
 Requires:       python3-requests
 BuildRequires:  %{python_module setuptools}
 BuildRequires:  python-rpm-macros
+BuildRequires:  fdupes
 
 %python_subpackages
 
