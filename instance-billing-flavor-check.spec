@@ -22,7 +22,7 @@ License:        GPL3.0-only
 Group:          Productivity/Networking/Web/Servers
 URL:            https://github.com/SUSE-Enceladus/instance-billing-flavor-check
 Source0:        %{name}-%{version}.tar.gz
-BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-roo
+BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:       python3
 Requires:       python3-lxml
 Requires:       python3-requests
