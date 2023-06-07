@@ -26,7 +26,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:       python3
 Requires:       python3-lxml
 Requires:       python3-requests
-BuildRequires:  python3-setuptools
+BuildRequires:  %{python_module setuptools}
 BuildRequires:  python-rpm-macros
 
 %python_subpackages
@@ -43,11 +43,14 @@ Check if instance is PAYG or BYOS
 
 %install
 %python_install
-mkdir -p %{buildroot}%{python3_sitelib}/instance_flavor_check
+%python_clone -a %{buildroot}%{_bindir}/instance-flavor-check
+%python_expand %fdupes %{buildroot}%{$python_sitelib}
 
-%files
-%defattr(-,root,root,-)
+%post
+%python_install_alternative instance-flavor-check
+
+%files %{python_files}
 %doc README.md
 %license LICENSE
-%{_sbindir}/instance-flavor-check
-%{python3_sitelib}/instance_flavor_check/*.py
+%python_alternative %{_bindir}/instance-flavor-check
+%{python_sitelib}/instance_billing_flavor_check*
