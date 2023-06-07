@@ -15,7 +15,7 @@
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
 Summary:        Cloud Billing Flavour Check
-Name:           python-instance-billing-type-check
+Name:           python-instance-billing-flavor-check
 Version:        0.0.1
 Release:        0
 License:        GPL3.0-only
