@@ -20,7 +20,7 @@ Summary:        Cloud Billing Flavour Check
 Name:           python-instance-billing-flavor-check
 Version:        0.0.1
 Release:        0
-License:        GPL3.0-only
+License:        GPL-3.0
 Group:          Productivity/Networking/Web/Utilities
 URL:            https://github.com/SUSE-Enceladus/instance-billing-flavor-check
 Source0:        %{name}-%{version}.tar.gz
