@@ -28,15 +28,9 @@ except ImportError:
 
 version = open('lib/instance_billing_flavor_check/VERSION').read().strip()
 
-with open('requirements.txt') as req_file:
-    requirements = req_file.read().splitlines()
-
-with open('requirements-dev.txt') as req_file:
-    dev_requirements = req_file.read().splitlines()[2:]
-
 if __name__ == '__main__':
     setuptools.setup(
-        name='instance-flavor-check',
+        name='instance-billing-flavor-check',
         description=(
             'Command-line tools to determine if an instance is PAYG or BYOS '
         ),
@@ -44,10 +38,6 @@ if __name__ == '__main__':
         long_description_content_type="text/markdown",
         url='https://github.com/SUSE-Enceladus/instance-billing-flavor-check',
         license='GPLv3+',
-        install_requires=requirements,
-        extras_require={
-            'dev': dev_requirements
-        },
         author='SUSE Public Cloud Team',
         author_email='public-cloud-dev@susecloud.net',
         version=version,
