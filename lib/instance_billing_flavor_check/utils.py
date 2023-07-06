@@ -46,7 +46,7 @@ requests.packages.urllib3.disable_warnings(
     requests.packages.urllib3.exceptions.InsecureRequestWarning
 )
 
- 
+
 def get_instance_data_command():
     config = configparser.ConfigParser()
     if config.read(REGION_SRV_CLIENT_CONFIG_PATH):
@@ -140,7 +140,9 @@ def make_request(rmt_ip_addr, metadata, identifier):
     except requests.exceptions.Timeout as err:
         message = 'Timeout Error:{}'.format(err)
     except requests.exceptions.RequestException as err:
-        message = 'Unexpected error:{}'.format(err)
+        message = 'Request error:{}'.format(err)
+    except Exception as err:
+        message = 'Unexpected error: {}'.format(err)
 
     if message:
         logger.error(message)
