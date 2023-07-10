@@ -25,11 +25,9 @@ from instance_billing_flavor_check.command import Command
 from lxml import etree
 
 logger = logging.getLogger(__name__)
+log_filename = '/var/log/{}'.format(__name__.split('.')[0])
 logging.basicConfig(
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler('instance-billing-flavor-check.log', mode='w'),
-    ],
+    filename=log_filename,
     level=logging.INFO,
     format="%(message)s"
 )
@@ -171,17 +169,21 @@ def check_payg_byos():
     metadata = get_metadata()
     identifier = get_identifier()
     if not metadata or not identifier:
+        print('BYOS')
         sys.exit(12)
 
     rmt_ips_addr = get_rmt_ip_addr()
     if not rmt_ips_addr:
         logger.warning('Instance can be either BYOS or PAYG and not registered')
+        print('BYOS')
         sys.exit(12)
 
     code_flavour = {'PAYG': 10, 'BYOS': 11}
     for rmt_ip_addr in rmt_ips_addr:
         flavour = make_request(rmt_ip_addr, metadata, identifier)
         if flavour:
+            print(flavour)
             logger.info(flavour)
             sys.exit(code_flavour.get(flavour))
+    print('BYOS')
     sys.exit(12)
