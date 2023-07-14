@@ -17,6 +17,7 @@
 
 import csv
 import configparser
+import ipaddress
 import logging
 import sys
 import requests
@@ -90,8 +91,7 @@ def get_identifier():
         logger.error("Could not open '%s' file", BASEPRODUCT_PATH)
 
 
-def get_rmt_ip_addr():
-    """Return the RMT update server IP the instance is registered to."""
+def _get_ips_from_etc_hosts():
     try:
         with open(ETC_HOSTS_PATH, encoding='utf-8') as etc_hosts:
             etc_hosts_lines = etc_hosts.readlines()
@@ -100,17 +100,40 @@ def get_rmt_ip_addr():
         return
 
     # use present RMT server IP first if registered
+    rmt_ips_addr = []
     for etc_hosts_line in etc_hosts_lines:
-        if 'susecloud.net' in etc_hosts_line:
-            return etc_hosts_line.split('\t')[0]
+        if 'susecloud.net' in etc_hosts_line and not etc_hosts_line.startswith('#'):
+            # save all the IPs for susecloud.net
+            # as with IPv6 enabled there will be more than one line
+            etc_hosts_ip_addr = etc_hosts_line.split()[0]
+            try:
+                ipaddress.ip_address(etc_hosts_ip_addr)
+                rmt_ips_addr.append(etc_hosts_ip_addr)
+            except ValueError:
+                pass
 
-    if 'cloudregister' in sys.modules:
-        # get a new RMT IP
-        server = get_smt(False)
-        rmt_ips_addr = []
-        if server.get_ipv6():
-            rmt_ips_addr.append('[{}]'.format(server.get_ipv6()))
-        rmt_ips_addr.append(server.get_ipv4())
+    return rmt_ips_addr
+
+
+def _get_ips_from_cloudregister():
+    # get a new RMT IP
+    server = get_smt(False)
+    rmt_ips_addr = []
+    if server.get_ipv6():
+        rmt_ips_addr.append('[{}]'.format(server.get_ipv6()))
+    rmt_ips_addr.append(server.get_ipv4())
+
+    return rmt_ips_addr
+
+
+def get_rmt_ip_addr():
+    """Return the RMT update server IP the instance is registered to."""
+    rmt_ips_addr = _get_ips_from_etc_hosts()
+
+    if not rmt_ips_addr and 'cloudregister' in sys.modules:
+        rmt_ips_addr = _get_ips_from_cloudregister()
+
+    if rmt_ips_addr:
         return rmt_ips_addr
 
     logger.info('Could not determine update server IP address')
