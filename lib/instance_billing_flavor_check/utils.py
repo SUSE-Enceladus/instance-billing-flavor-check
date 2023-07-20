@@ -34,7 +34,7 @@ logging.basicConfig(
 )
 try:
     from cloudregister.registerutils import get_smt
-except ModuleNotFoundError as err:
+except ImportError:
     pass
 
 REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
