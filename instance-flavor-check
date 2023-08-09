@@ -17,6 +17,12 @@
 # You should have received a copy of the GNU General Public License along with
 # instance-billing-flavor-check. If not, see <http://www.gnu.org/licenses/>.
 
+import os
+import sys
+
+if os.geteuid():
+    sys.exit('You must be root')
+
 from instance_billing_flavor_check.utils import check_payg_byos
 
 check_payg_byos()
