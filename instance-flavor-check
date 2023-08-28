@@ -21,6 +21,8 @@ import os
 import sys
 
 if os.geteuid():
+    # Need to be root in Azure because we read from a specific area of the disc
+    # and the log file location
     sys.exit('You must be root')
 
 from instance_billing_flavor_check.utils import check_payg_byos
