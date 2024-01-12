@@ -141,6 +141,16 @@ def get_rmt_ip_addr():
 
 def make_request(rmt_ip_addr, metadata, identifier):
     """Return the flavour from the RMT server request."""
+    try:
+        ip_addr = ipaddress.ip_address(rmt_ip_addr)
+    except ValueError:
+        logging.error(
+            'The RMT IP address {} is not valid.'.format(rmt_ip_addr)
+        )
+        return
+
+    if isinstance(ip_addr, ipaddress.IPv6Address):
+        rmt_ip_addr = '[{}]'.format(rmt_ip_addr)
     instance_check_url = 'https://{}/api/instance/check'.format(rmt_ip_addr)
     message = None
     billing_check_params = {
