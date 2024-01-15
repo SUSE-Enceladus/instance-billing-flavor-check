@@ -1,4 +1,4 @@
-# Copyright 2023 SUSE LLC
+# Copyright 2024 SUSE LLC
 #
 # This file is part of instance-billing-flavor-check
 #
