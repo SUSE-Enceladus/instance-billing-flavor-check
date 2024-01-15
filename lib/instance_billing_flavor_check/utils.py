@@ -171,7 +171,7 @@ def make_request(rmt_ip_addr, metadata, identifier):
     except requests.exceptions.Timeout as err:
         message = 'Timeout Error:{}'.format(err)
     except requests.exceptions.RequestException as err:
-        message = 'Request error:{}'.format(err)
+        message = 'Request Error:{}'.format(err)
     except Exception as err:
         message = 'Unexpected error: {}'.format(err)
 
