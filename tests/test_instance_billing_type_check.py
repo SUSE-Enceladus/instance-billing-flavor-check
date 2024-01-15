@@ -106,7 +106,7 @@ def test_make_request_ipv6_request_error(mock_request_get, caplog):
     response.json.return_value = {'flavor': 'supa flavor'}
     mock_request_get.side_effect = exceptions.RequestException('foo')
     assert utils.make_request('fc00::1', 'foo', 'bar') is None
-    assert 'Request Error:foo' in caplog.text
+    assert 'Request error:foo' in caplog.text
     mock_request_get.assert_called_once_with(
         'https://[fc00::1]/api/instance/check',
         timeout=2,
