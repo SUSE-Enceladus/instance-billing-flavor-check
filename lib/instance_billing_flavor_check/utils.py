@@ -148,7 +148,7 @@ def _get_proxies():
     If any proxy has been set up,
     this method returns the proxy info in a dictionary.
 
-    Otherwise, returns empty dictionary
+    Otherwise, returns None
     """
     if os.environ.get('http_proxy') or os.environ.get('https_proxy'):
         logger.info('Using proxy settings present on the environment.')
