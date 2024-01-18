@@ -148,13 +148,13 @@ def _get_proxies():
     If any proxy has been set up,
     this method returns the proxy info in a dictionary.
 
-    Otherwise, returns None
+    Otherwise, returns an empty dictionary
     """
     if os.environ.get('http_proxy') or os.environ.get('https_proxy'):
-        logger.info('Using proxy settings present on the environment.')
+        logger.info('Using proxy settings present in the environment.')
         # by default/if None requests relies on the environment variables
         # HTTP_PROXY and HTTPS_PROXY
-        return None
+        return {}
 
     proxies = {}
     proxy_config = []
@@ -162,7 +162,7 @@ def _get_proxies():
         with open(PROXY_CONFIG_PATH, 'r') as proxy_file:
             proxy_config = proxy_file.readlines()
     except FileNotFoundError:
-        logging.info('No proxy config file found on %s', PROXY_CONFIG_PATH)
+        pass
 
     for entry in proxy_config:
         if 'PROXY_ENABLED' in entry and 'no' in entry:
@@ -174,7 +174,7 @@ def _get_proxies():
         if 'NO_PROXY' in entry:
             proxies['no_proxy'] = entry.split('"')[1]
 
-    return proxies or None
+    return proxies
 
 
 def make_request(rmt_ip_addr, metadata, identifier):
