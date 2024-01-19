@@ -19,6 +19,7 @@ import csv
 import configparser
 import ipaddress
 import logging
+import os
 import sys
 import requests
 
@@ -40,6 +41,7 @@ except ImportError:
 REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
 BASEPRODUCT_PATH = '/etc/products.d/baseproduct'
 ETC_HOSTS_PATH = '/etc/hosts'
+PROXY_CONFIG_PATH = '/etc/sysconfig/proxy'
 
 requests.packages.urllib3.disable_warnings(
     requests.packages.urllib3.exceptions.InsecureRequestWarning
@@ -139,6 +141,42 @@ def get_rmt_ip_addr():
     logger.info('Could not determine update server IP address')
 
 
+def _get_proxies():
+    """
+    Get proxy info.
+
+    If any proxy has been set up,
+    this method returns the proxy info in a dictionary.
+
+    Otherwise, returns an empty dictionary
+    """
+    if os.environ.get('http_proxy') or os.environ.get('https_proxy'):
+        logger.info('Using proxy settings present in the environment.')
+        # by default/if None requests relies on the environment variables
+        # HTTP_PROXY and HTTPS_PROXY
+        return {}
+
+    proxies = {}
+    proxy_config = []
+    try:
+        with open(PROXY_CONFIG_PATH, 'r') as proxy_file:
+            proxy_config = proxy_file.readlines()
+    except FileNotFoundError:
+        pass
+
+    for entry in proxy_config:
+        if 'PROXY_ENABLED' in entry and 'no' in entry:
+            return None
+        if 'HTTP_PROXY' in entry:
+            proxies['http_proxy'] = entry.split('"')[1]
+        if 'HTTPS_PROXY' in entry:
+            proxies['https_proxy'] = entry.split('"')[1]
+        if 'NO_PROXY' in entry:
+            proxies['no_proxy'] = entry.split('"')[1]
+
+    return proxies
+
+
 def make_request(rmt_ip_addr, metadata, identifier):
     """Return the flavour from the RMT server request."""
     try:
@@ -157,12 +195,14 @@ def make_request(rmt_ip_addr, metadata, identifier):
         'metadata': metadata,
         'identifier': identifier
     }
+    proxies = _get_proxies()
     try:
         response = requests.get(
             instance_check_url,
             timeout=2,
             verify=False,
-            params=billing_check_params
+            params=billing_check_params,
+            proxies=proxies
         )
     except requests.exceptions.HTTPError as err:
         message = 'Http Error:{}'.format(err)
