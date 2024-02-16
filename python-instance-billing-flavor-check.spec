@@ -48,3 +48,5 @@ python3 setup.py install --prefix=%{_prefix}  --root=%{buildroot}
 %license LICENSE
 %{_bindir}/instance-flavor-check
 %{python_sitelib}/instance_billing_flavor_check*
+
+%changelog
