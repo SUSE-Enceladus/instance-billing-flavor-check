@@ -42,6 +42,7 @@ REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
 BASEPRODUCT_PATH = '/etc/products.d/baseproduct'
 ETC_HOSTS_PATH = '/etc/hosts'
 PROXY_CONFIG_PATH = '/etc/sysconfig/proxy'
+RETRY_ATTEMPTS = 3
 
 requests.packages.urllib3.disable_warnings(
     requests.packages.urllib3.exceptions.InsecureRequestWarning
@@ -196,36 +197,39 @@ def make_request(rmt_ip_addr, metadata, identifier):
         'identifier': identifier
     }
     proxies = _get_proxies()
-    try:
-        response = requests.get(
-            instance_check_url,
-            timeout=2,
-            verify=False,
-            params=billing_check_params,
-            proxies=proxies
-        )
-    except requests.exceptions.HTTPError as err:
-        message = 'Http Error:{}'.format(err)
-    except requests.exceptions.ConnectionError as err:
-        message = 'Error Connecting:{}'.format(err)
-    except requests.exceptions.Timeout as err:
-        message = 'Timeout Error:{}'.format(err)
-    except requests.exceptions.RequestException as err:
-        message = 'Request error:{}'.format(err)
-    except Exception as err:
-        message = 'Unexpected error: {}'.format(err)
 
-    if message:
-        logger.error(message)
-        return
+    for _ in range(0, RETRY_ATTEMPTS):
+        try:
+            response = requests.get(
+                instance_check_url,
+                timeout=2,
+                verify=False,
+                params=billing_check_params,
+                proxies=proxies
+            )
+        except requests.exceptions.HTTPError as err:
+            message = 'Http Error:{}'.format(err)
+        except requests.exceptions.ConnectionError as err:
+            message = 'Error Connecting:{}'.format(err)
+        except requests.exceptions.Timeout as err:
+            message = 'Timeout Error:{}'.format(err)
+        except requests.exceptions.RequestException as err:
+            message = 'Request error:{}'.format(err)
+        except Exception as err:
+            message = 'Unexpected error: {}'.format(err)
 
-    if response.status_code == 200:
-        result = response.json()
-        logger.debug(result)
-        return result.get('flavor')
+        if message:
+            logger.error(message)
+            continue
+
+        if response.status_code == 200:
+            result = response.json()
+            logger.debug(result)
+            return result.get('flavor')
 
     logger.error(
-        'Request to check if instance is PAYG/BYOS failed: %s', response.reason
+        'Request to check if instance is PAYG/BYOS failed: %s',
+        message
     )
 
 
