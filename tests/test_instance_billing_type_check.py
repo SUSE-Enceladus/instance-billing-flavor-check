@@ -28,6 +28,7 @@ def test_make_request_ipv4(mock_request_get):
     assert utils.make_request(IPV4_ADDR, 'foo', 'bar') == 'amazing flavor'
     mock_request_get.assert_called_once_with(
         'https://203.0.113.1/api/instance/check',
+        proxies=None,
         timeout=2,
         verify=False,
         params={'metadata': 'foo', 'identifier': 'bar'}
@@ -44,6 +45,7 @@ def test_make_request_ipv6(mock_request_get):
     assert utils.make_request(IPV6_ADDR, 'foo', 'bar') == 'supa flavor'
     mock_request_get.assert_called_once_with(
         'https://[2001:DB8::1]/api/instance/check',
+        proxies=None,
         timeout=2,
         verify=False,
         params={'metadata': 'foo', 'identifier': 'bar'}
@@ -60,6 +62,7 @@ def test_make_request_ipv6_http_error(mock_request_get, caplog):
     assert 'Http Error:foo' in caplog.text
     mock_request_get.assert_called_once_with(
         'https://[2001:DB8::1]/api/instance/check',
+        proxies=None,
         timeout=2,
         verify=False,
         params={'metadata': 'foo', 'identifier': 'bar'}
@@ -77,6 +80,7 @@ def test_make_request_ipv6_connection_error(mock_request_get, caplog):
     assert 'Error Connecting:foo' in caplog.text
     mock_request_get.assert_called_once_with(
         'https://[2001:DB8::1]/api/instance/check',
+        proxies=None,
         timeout=2,
         verify=False,
         params={'metadata': 'foo', 'identifier': 'bar'}
@@ -94,6 +98,7 @@ def test_make_request_ipv6_timeout_error(mock_request_get, caplog):
     assert 'Timeout Error:foo' in caplog.text
     mock_request_get.assert_called_once_with(
         'https://[2001:DB8::1]/api/instance/check',
+        proxies=None,
         timeout=2,
         verify=False,
         params={'metadata': 'foo', 'identifier': 'bar'}
@@ -111,6 +116,7 @@ def test_make_request_ipv6_request_error(mock_request_get, caplog):
     assert 'Request error:foo' in caplog.text
     mock_request_get.assert_called_once_with(
         'https://[2001:DB8::1]/api/instance/check',
+        proxies=None,
         timeout=2,
         verify=False,
         params={'metadata': 'foo', 'identifier': 'bar'}
@@ -128,6 +134,7 @@ def test_make_request_ipv6_unexpected_error(mock_request_get, caplog):
     assert 'Unexpected error: foo' in caplog.text
     mock_request_get.assert_called_once_with(
         'https://[2001:DB8::1]/api/instance/check',
+        proxies=None,
         timeout=2,
         verify=False,
         params={'metadata': 'foo', 'identifier': 'bar'}
@@ -154,6 +161,7 @@ def test_make_request_ipv6_request_ok_wrong_status_code(
     assert error_message in caplog.text
     mock_request_get.assert_called_once_with(
         'https://[2001:DB8::1]/api/instance/check',
+        proxies=None,
         timeout=2,
         verify=False,
         params={'metadata': 'foo', 'identifier': 'bar'}
