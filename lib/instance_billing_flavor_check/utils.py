@@ -38,7 +38,9 @@ try:
         get_smt, has_ipv4_access, has_ipv6_access
     )
 except ImportError:
-    pass
+    get_smt = None
+    has_ipv4_access = None
+    has_ipv6_access = None
 
 REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
 BASEPRODUCT_PATH = '/etc/products.d/baseproduct'
