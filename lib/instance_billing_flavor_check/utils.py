@@ -117,7 +117,7 @@ def _get_ips_from_etc_hosts():
     return rmt_ips_addr
 
 
-def _get_ips_from_cloudregister():
+def _get_ips_from_cloudregister(): # pragma: no cover
     # get a new RMT IP
     server = get_smt(False)
     rmt_ips_addr = []

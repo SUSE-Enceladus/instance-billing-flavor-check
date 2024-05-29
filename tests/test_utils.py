@@ -1,9 +1,7 @@
-import logging
 import os
 
 from unittest import mock
 from unittest.mock import patch
-from requests import exceptions
 from instance_billing_flavor_check import utils
 
 FAKE_PROXY = {'http_proxy': 'foo', 'https_proxy': 'bar', 'no_proxy': 'foobar'}
