@@ -28,6 +28,7 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:       python3
 Requires:       python3-lxml
 Requires:       python3-requests
+Requires:       cloud-regionsrv-client >= 10.2.0
 BuildRequires:  python3-setuptools
 BuildRequires:  python-rpm-macros
 
