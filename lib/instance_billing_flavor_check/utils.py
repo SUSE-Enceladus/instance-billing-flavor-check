@@ -31,7 +31,7 @@ log_filename = '/var/log/{}'.format(__name__.split('.')[0])
 logging.basicConfig(
     filename=log_filename,
     level=logging.INFO,
-    format="%(message)s"
+    format="%(asctime)s: %(message)s"
 )
 try:
     from cloudregister.registerutils import get_smt
