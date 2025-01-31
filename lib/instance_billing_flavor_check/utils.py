@@ -20,8 +20,9 @@ import configparser
 import ipaddress
 import logging
 import os
-import sys
 import requests
+import sys
+import time
 
 from instance_billing_flavor_check.command import Command
 from lxml import etree
@@ -44,6 +45,7 @@ except ImportError:
 
 REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
 BASEPRODUCT_PATH = '/etc/products.d/baseproduct'
+CACHE_FILE_PATH='/var/cache/instance-billing-flavor-check'
 ETC_HOSTS_PATH = '/etc/hosts'
 PROXY_CONFIG_PATH = '/etc/sysconfig/proxy'
 
@@ -146,6 +148,16 @@ def get_rmt_ip_addr():
     logger.info('Could not determine update server IP address')
 
 
+def _get_cache_value():
+    """
+    Get the flavour status from the cache
+    """
+    flavour = 'BYOS'
+    if not os.path.exists(CACHE_FILE_PATH):
+        _write_cache(flavour)
+    return open(CACHE_FILE_PATH, 'r').read()
+
+
 def _get_proxies():
     """
     Get proxy info.
@@ -182,6 +194,13 @@ def _get_proxies():
     return proxies
 
 
+def _write_cache(flavour):
+    """Cache the instance flavour"""
+    cache = open(CACHE_FILE_PATH, 'w')
+    cache.write(flavour)
+    cache.close()
+
+
 def make_request(rmt_ip_addr, metadata, identifier):
     """Return the flavour from the RMT server request."""
     try:
@@ -201,33 +220,41 @@ def make_request(rmt_ip_addr, metadata, identifier):
         'identifier': identifier
     }
     proxies = _get_proxies()
-    try:
-        response = requests.get(
-            instance_check_url,
-            timeout=2,
-            verify=False,
-            params=billing_check_params,
-            proxies=proxies
-        )
-    except requests.exceptions.HTTPError as err:
-        message = 'Http Error:{}'.format(err)
-    except requests.exceptions.ConnectionError as err:
-        message = 'Error Connecting:{}'.format(err)
-    except requests.exceptions.Timeout as err:
-        message = 'Timeout Error:{}'.format(err)
-    except requests.exceptions.RequestException as err:
-        message = 'Request error:{}'.format(err)
-    except Exception as err:
-        message = 'Unexpected error: {}'.format(err)
+    retry_count = 1
+    while retry_count != 4:
+        try:
+            response = requests.get(
+                instance_check_url,
+                timeout=2,
+                verify=False,
+                params=billing_check_params,
+                proxies=proxies
+            )
+        except requests.exceptions.HTTPError as err:
+            message = 'Http Error:{}'.format(err)
+        except requests.exceptions.ConnectionError as err:
+            message = 'Error Connecting:{}'.format(err)
+        except requests.exceptions.Timeout as err:
+            message = 'Timeout Error:{}'.format(err)
+        except requests.exceptions.RequestException as err:
+            message = 'Request error:{}'.format(err)
+        except Exception as err:
+            message = 'Unexpected error: {}'.format(err)
+    
+        if message:
+            logger.warning(
+                'Attempt {}: failed: {}'.format(retry_count, message)
+            )
+            if 'Timeout' in message:
+                retry_count += 1
+                time.sleep(2)
+            if 'Timeout' in message or retry_count == 4:
+                return
 
-    if message:
-        logger.error(message)
-        return
-
-    if response.status_code == 200:
-        result = response.json()
-        logger.debug(result)
-        return result.get('flavor')
+        if response.status_code == 200:
+            result = response.json()
+            logger.debug(result)
+            return result.get('flavor')
 
     logger.error(
         'Request to check if instance is PAYG/BYOS failed: %s', response.reason
@@ -264,8 +291,11 @@ def check_payg_byos():
     for rmt_ip_addr in rmt_ips_addr:
         flavour = make_request(rmt_ip_addr, metadata, identifier)
         if flavour:
+            _write_cache(flavour)
             print(flavour)
             logger.info(flavour)
             sys.exit(code_flavour.get(flavour))
-    print('BYOS')
-    sys.exit(12)
+    flavour = _get_cache_value()
+    logger.info('Using cache value: {}'.format(flavour))
+    print(flavour)
+    sys.exit(code_flavour.get(flavour))
