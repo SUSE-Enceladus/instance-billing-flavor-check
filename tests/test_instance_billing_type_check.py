@@ -11,7 +11,6 @@
 # You should have received a copy of the GNU Lesser General Public
 # License along with this library.
 
-
 import sys
 
 from pytest import raises
@@ -181,7 +180,6 @@ def test_make_request_not_valid_ip(caplog):
     assert error_message in caplog.text
 
 
-
 @patch('instance_billing_flavor_check.utils.has_ipv6_access')
 @patch('instance_billing_flavor_check.utils.configparser.ConfigParser.read')
 def test_check_payg_byos_no_identifier(mock_configparser, mock_ipv6_access):
@@ -190,7 +188,6 @@ def test_check_payg_byos_no_identifier(mock_configparser, mock_ipv6_access):
     with raises(SystemExit) as cm:
         assert utils.check_payg_byos() is None
     assert str(cm.value) == '12'
-
 
 
 @patch('instance_billing_flavor_check.utils.has_ipv6_access')
@@ -253,7 +250,6 @@ def test_check_payg_byos_no_rmt_ip_addr(
     assert str(cm.value) == '12'
 
 
-
 @patch('instance_billing_flavor_check.utils.has_ipv6_access')
 @patch('instance_billing_flavor_check.command.subprocess.Popen')
 @patch('instance_billing_flavor_check.utils.get_rmt_ip_addr')
@@ -263,6 +259,7 @@ def test_check_payg_byos_no_region_srv_client_file(
     mock_configparser, mock_get_id, mock_get_rmt_ip_addr,
     mock_popen, mock_ipv6_access
 ):
+
     mock_ipv6_access.return_value = False
     mock_process = Mock()
     mock_process.communicate = Mock(
@@ -353,7 +350,6 @@ def test_get_rmt_ip_addr_from_cloudregister(
     mock_ips_from_etc_hosts.return_value = None
     mock_ips_from_cloudreg.return_value = ['1.1.1.1']
     assert utils.get_rmt_ip_addr() == ['1.1.1.1']
-
 
 
 @patch('instance_billing_flavor_check.utils._get_ips_from_cloudregister')
