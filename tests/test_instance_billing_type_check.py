@@ -12,6 +12,7 @@
 # License along with this library.
 
 import sys
+
 from pytest import raises
 from unittest import mock
 from unittest.mock import patch, Mock
@@ -179,16 +180,20 @@ def test_make_request_not_valid_ip(caplog):
     assert error_message in caplog.text
 
 
+@patch('instance_billing_flavor_check.utils.has_ipv6_access')
 @patch('instance_billing_flavor_check.utils.configparser.ConfigParser.read')
-def test_check_payg_byos_no_identifier(mock_configparser):
+def test_check_payg_byos_no_identifier(mock_configparser, mock_ipv6_access):
+    mock_ipv6_access.return_value = False
     mock_configparser.return_value = False
     with raises(SystemExit) as cm:
         assert utils.check_payg_byos() is None
     assert str(cm.value) == '12'
 
 
+@patch('instance_billing_flavor_check.utils.has_ipv6_access')
 @patch('instance_billing_flavor_check.utils.get_metadata')
-def test_check_payg_byos_no_instance_metadata(mock_get_metadata):
+def test_check_payg_byos_no_instance_metadata(mock_get_metadata, mock_ipv6):
+    mock_ipv6.return_value = False
     mock_get_metadata.return_value = 'foo'
     file_mock = Mock()
     with patch('builtins.open', create=True) as mock_open:
@@ -199,9 +204,11 @@ def test_check_payg_byos_no_instance_metadata(mock_get_metadata):
             assert utils.check_payg_byos() is None
 
 
+@patch('instance_billing_flavor_check.utils.has_ipv6_access')
 @patch('instance_billing_flavor_check.command.Command.run')
 @patch('instance_billing_flavor_check.utils.get_instance_data_command')
-def test_check_payg_byos_no_command(mock_configparser, mock_popen):
+def test_check_payg_byos_no_command(mock_configparser, mock_popen, mock_ipv6):
+    mock_ipv6.return_value = False
     mock_process = Mock()
     mock_process.communicate = Mock(
         return_value=[str.encode(''), str.encode('')]
@@ -215,13 +222,16 @@ def test_check_payg_byos_no_command(mock_configparser, mock_popen):
     mock_popen.called_once_with(['super', 'cloud'])
 
 
+@patch('instance_billing_flavor_check.utils.has_ipv6_access')
 @patch('instance_billing_flavor_check.command.subprocess.Popen')
 @patch('instance_billing_flavor_check.utils.get_rmt_ip_addr')
 @patch('instance_billing_flavor_check.utils.get_identifier')
 @patch('instance_billing_flavor_check.utils.configparser.ConfigParser')
 def test_check_payg_byos_no_rmt_ip_addr(
-    mock_configparser, mock_get_id, mock_get_rmt_ip_addr, mock_popen
+    mock_configparser, mock_get_id, mock_get_rmt_ip_addr,
+    mock_popen, mock_ipv6_access
 ):
+    mock_ipv6_access.return_value = False
     mock_process = Mock()
     mock_process.communicate = Mock(
         return_value=[str.encode('stdout'), str.encode('')]
@@ -240,13 +250,17 @@ def test_check_payg_byos_no_rmt_ip_addr(
     assert str(cm.value) == '12'
 
 
+@patch('instance_billing_flavor_check.utils.has_ipv6_access')
 @patch('instance_billing_flavor_check.command.subprocess.Popen')
 @patch('instance_billing_flavor_check.utils.get_rmt_ip_addr')
 @patch('instance_billing_flavor_check.utils.get_identifier')
 @patch('instance_billing_flavor_check.utils.configparser.ConfigParser.read')
 def test_check_payg_byos_no_region_srv_client_file(
-    mock_configparser, mock_get_id, mock_get_rmt_ip_addr, mock_popen
+    mock_configparser, mock_get_id, mock_get_rmt_ip_addr,
+    mock_popen, mock_ipv6_access
 ):
+
+    mock_ipv6_access.return_value = False
     mock_process = Mock()
     mock_process.communicate = Mock(
         return_value=[str.encode('stdout'), str.encode('')]
@@ -278,8 +292,54 @@ def test_etc_hosts_file_wrong_ip(mock_ip_addr):
 
 def test_etc_hosts_file_valid_ip():
     foo = '1.1.1.1 susecloud.net'
-    with patch('builtins.open', mock.mock_open(read_data=foo)) as mock_open:
+    with patch('builtins.open', mock.mock_open(read_data=foo)):
         assert utils._get_ips_from_etc_hosts() == ['1.1.1.1']
+
+
+@patch('instance_billing_flavor_check.utils.get_smt')
+@patch('instance_billing_flavor_check.utils.has_ipv4_access')
+@patch('instance_billing_flavor_check.utils.has_ipv6_access')
+def test_get_ips_from_cloudregister_only_ipv6(
+    mock_ipv6, mock_ipv4, mock_get_smt
+):
+    mock_smt = Mock()
+    mock_smt.get_ipv6.return_value = IPV6_ADDR
+    mock_get_smt.return_value = mock_smt
+    mock_ipv6.return_value = True
+    mock_ipv4.return_value = False
+    assert utils._get_ips_from_cloudregister() == ['[{}]'.format(IPV6_ADDR)]
+
+
+@patch('instance_billing_flavor_check.utils.get_smt')
+@patch('instance_billing_flavor_check.utils.has_ipv4_access')
+@patch('instance_billing_flavor_check.utils.has_ipv6_access')
+def test_get_ips_from_cloudregister_only_ipv4(
+    mock_ipv6, mock_ipv4, mock_get_smt
+):
+    mock_smt = Mock()
+    mock_smt.get_ipv4.return_value = IPV4_ADDR
+    mock_get_smt.return_value = mock_smt
+    mock_ipv6.return_value = False
+    mock_ipv4.return_value = True
+    assert utils._get_ips_from_cloudregister() == [IPV4_ADDR]
+
+
+@patch('instance_billing_flavor_check.utils.get_smt')
+@patch('instance_billing_flavor_check.utils.has_ipv4_access')
+@patch('instance_billing_flavor_check.utils.has_ipv6_access')
+def test_get_ips_from_cloudregister_ipv6_and_ipv4(
+    mock_ipv6, mock_ipv4, mock_get_smt
+):
+    mock_smt = Mock()
+    mock_smt.get_ipv4.return_value = IPV4_ADDR
+    mock_smt.get_ipv6.return_value = IPV6_ADDR
+    mock_get_smt.return_value = mock_smt
+    mock_ipv6.return_value = True
+    mock_ipv4.return_value = True
+    assert utils._get_ips_from_cloudregister() == [
+        '[{}]'.format(IPV6_ADDR),
+        IPV4_ADDR
+    ]
 
 
 @patch('instance_billing_flavor_check.utils._get_ips_from_cloudregister')
@@ -288,7 +348,6 @@ def test_get_rmt_ip_addr_from_cloudregister(
     mock_ips_from_etc_hosts, mock_ips_from_cloudreg
 ):
     mock_ips_from_etc_hosts.return_value = None
-    sys.modules['cloudregister'] = Mock()
     mock_ips_from_cloudreg.return_value = ['1.1.1.1']
     assert utils.get_rmt_ip_addr() == ['1.1.1.1']
 
@@ -299,18 +358,18 @@ def test_get_rmt_ip_addr_no_ips(
     mock_ips_from_etc_hosts, mock_ips_from_cloudreg
 ):
     mock_ips_from_etc_hosts.return_value = None
-    sys.modules['cloudregister'] = Mock()
     mock_ips_from_cloudreg.return_value = []
     assert utils.get_rmt_ip_addr() is None
 
 
+@patch('instance_billing_flavor_check.utils.has_ipv6_access')
 @patch('instance_billing_flavor_check.utils.make_request')
 @patch('instance_billing_flavor_check.command.subprocess.Popen')
 @patch('instance_billing_flavor_check.utils.get_rmt_ip_addr')
 @patch('instance_billing_flavor_check.utils.get_instance_data_command')
 def test_check_payg_byos_no_flavor_found(
     mock_get_instance_data_command, mock_get_rmt_ip_addr,
-    mock_popen, mock_make_request
+    mock_popen, mock_make_request, mock_ipv6_access
 ):
     mock_process = Mock()
     mock_process.communicate = Mock(
@@ -321,18 +380,20 @@ def test_check_payg_byos_no_flavor_found(
     mock_get_instance_data_command.return_value = 'foo'
     mock_get_rmt_ip_addr.return_value = ['foo']
     mock_make_request.return_value = None
+    mock_ipv6_access.return_value = True
     with raises(SystemExit) as cm:
         assert utils.check_payg_byos() is None
     assert str(cm.value) == '12'
 
 
+@patch('instance_billing_flavor_check.utils.has_ipv6_access')
 @patch('instance_billing_flavor_check.utils.make_request')
 @patch('instance_billing_flavor_check.command.subprocess.Popen')
 @patch('instance_billing_flavor_check.utils.get_rmt_ip_addr')
 @patch('instance_billing_flavor_check.utils.get_instance_data_command')
 def test_check_payg_byos_PAYG_flavor_found(
     mock_get_instance_data_command, mock_get_rmt_ip_addr,
-    mock_popen, mock_make_request# , mock_sys_exit
+    mock_popen, mock_make_request, mock_has_ipv6_access
 ):
     mock_process = Mock()
     mock_process.communicate = Mock(
@@ -343,6 +404,7 @@ def test_check_payg_byos_PAYG_flavor_found(
     mock_get_instance_data_command.return_value = 'foo'
     mock_get_rmt_ip_addr.return_value = ['foo']
     mock_make_request.return_value = 'PAYG'
+    mock_has_ipv6_access.return_value = True
     with raises(SystemExit) as cm:
         assert utils.check_payg_byos() is None
     assert str(cm.value) == '10'
@@ -352,3 +414,16 @@ def test_check_payg_byos_PAYG_flavor_found(
     with raises(SystemExit) as cm:
         assert utils.check_payg_byos() is None
     assert str(cm.value) == '11'
+
+
+@patch('instance_billing_flavor_check.utils.has_ipv4_access')
+@patch('instance_billing_flavor_check.utils.has_ipv6_access')
+def test_check_payg_byos_PAYG_no_network_access(
+    mock_has_ipv6_access, mock_has_ipv4_access
+):
+    mock_has_ipv6_access.return_value = False
+    mock_has_ipv4_access.return_value = False
+    with raises(SystemExit) as cm:
+        assert utils.check_payg_byos() is None
+    assert str(cm.value) == '12'
+

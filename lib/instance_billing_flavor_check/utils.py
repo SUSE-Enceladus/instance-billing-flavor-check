@@ -34,9 +34,13 @@ logging.basicConfig(
     format="%(asctime)s: %(message)s"
 )
 try:
-    from cloudregister.registerutils import get_smt
+    from cloudregister.registerutils import (
+        get_smt, has_ipv4_access, has_ipv6_access
+    )
 except ImportError:
-    pass
+    get_smt = None
+    has_ipv4_access = None
+    has_ipv6_access = None
 
 REGION_SRV_CLIENT_CONFIG_PATH = '/etc/regionserverclnt.cfg'
 BASEPRODUCT_PATH = '/etc/products.d/baseproduct'
@@ -121,9 +125,10 @@ def _get_ips_from_cloudregister(): # pragma: no cover
     # get a new RMT IP
     server = get_smt(False)
     rmt_ips_addr = []
-    if server.get_ipv6():
+    if has_ipv6_access() and server.get_ipv6():
         rmt_ips_addr.append('[{}]'.format(server.get_ipv6()))
-    rmt_ips_addr.append(server.get_ipv4())
+    if has_ipv4_access():
+        rmt_ips_addr.append(server.get_ipv4())
 
     return rmt_ips_addr
 
@@ -239,6 +244,10 @@ def check_payg_byos():
     - 11 -> BYOS
     - 12 -> Unknown
     """
+    if not (has_ipv6_access() or has_ipv4_access()):
+        # instance does not have internet access through IPv4 or IPv6
+        print('BYOS')
+        sys.exit(12)
     metadata = get_metadata()
     identifier = get_identifier()
     if not metadata or not identifier:
