@@ -14,22 +14,28 @@
 
 # Please submit bugfixes or comments via http://bugs.opensuse.org/
 #
-%define skip_python2 1
+
+%if 0%{?suse_version} >= 1600
+%define pythons %{primary_python}
+%else
+%define pythons python3
+%endif
+%global _sitelibdir %{%{pythons}_sitelib}
 
 Summary:        Cloud Billing Flavour Check
 Name:           python-instance-billing-flavor-check
-Version:        0.1.2
+Version:        1.0.0
 Release:        0
 License:        GPL-3.0
 Group:          Productivity/Networking/Web/Utilities
 URL:            https://github.com/SUSE-Enceladus/instance-billing-flavor-check
 Source0:        %{name}-%{version}.tar.gz
 BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
-Requires:       python3
-Requires:       python3-lxml
-Requires:       python3-requests
+Requires:       %{pythons}
+Requires:       %{pythons}-lxml
+Requires:       %{pythons}-requests
 Requires:       cloud-regionsrv-client >= 10.2.0
-BuildRequires:  python3-setuptools
+BuildRequires:  %{pythons}-setuptools
 BuildRequires:  python-rpm-macros
 
 %description
