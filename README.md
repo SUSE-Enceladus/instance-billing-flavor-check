@@ -10,7 +10,8 @@ A CLI tool to determine if an instance is PAYG or BYOS across different CSPs
 
 	Not valid instance metadata verified successfully
 
-**12 - Unknown**
+**12 - BYOS**
 
-	A problem during the verification of the instance metadata,
-	it prints BYOS
+        We could not reliably determine the flavor of the instance. The
+        instance is labeled as BYOS, the uncertainty of the determination
+        is indicated by the different exit code.
