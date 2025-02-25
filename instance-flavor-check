@@ -27,4 +27,6 @@ if os.geteuid():
 
 from instance_billing_flavor_check.utils import check_payg_byos
 
-check_payg_byos()
+flavor = check_payg_byos()
+print(flavor[0])
+sys.exit(flavor[1])

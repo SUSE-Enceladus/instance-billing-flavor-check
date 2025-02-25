@@ -263,39 +263,41 @@ def make_request(rmt_ip_addr, metadata, identifier):
 
 def check_payg_byos():
     """
-    Return 'PAYG' OR 'BYOS'
+    Return 'PAYG' OR 'BYOS' and a code
 
-    Instead of returning a string, this method returns
-    a exit code as follows:
-    - 10 -> PAYG
-    - 11 -> BYOS
-    - 12 -> Unknown
+    - (PAYG, 10)
+    - (BYOS, 11)
+    - (BYOS, 12) Unknown
+
+    When the flavor cannot be reliably determined we declar the instance to be
+    BYOS. That the information is not reliable is indicated by the return code.
     """
+    flavour = 'BYOS'
     if not (has_ipv6_access() or has_ipv4_access()):
         # instance does not have internet access through IPv4 or IPv6
-        print('BYOS')
-        sys.exit(12)
+        _write_cache(flavour)
+        return (flavour, 12)
     metadata = get_metadata()
     identifier = get_identifier()
     if not metadata or not identifier:
-        print('BYOS')
-        sys.exit(12)
+        logger.warning('No instance metadata and identifier')
+        _write_cache(flavour)
+        return (flavour, 12)
 
     rmt_ips_addr = get_rmt_ip_addr()
     if not rmt_ips_addr:
         logger.warning('Instance can be either BYOS or PAYG and not registered')
-        print('BYOS')
-        sys.exit(12)
+        _write_cache(flavour)
+        return (flavour, 12)
 
     code_flavour = {'PAYG': 10, 'BYOS': 11}
     for rmt_ip_addr in rmt_ips_addr:
         flavour = make_request(rmt_ip_addr, metadata, identifier)
         if flavour:
+            logger.info('Successful server query: {}'.format(flavour))
             _write_cache(flavour)
-            print(flavour)
-            logger.info(flavour)
-            sys.exit(code_flavour.get(flavour))
+            return (flavour, code_flavour.get(flavour))
+            
     flavour = _get_cache_value()
     logger.info('Using cache value: {}'.format(flavour))
-    print(flavour)
-    sys.exit(code_flavour.get(flavour))
+    return (flavour, code_flavour.get(flavour))
