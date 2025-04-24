@@ -219,7 +219,8 @@ def make_request(rmt_ip_addr, metadata, identifier):
         'identifier': identifier
     }
     proxies = _get_proxies()
-    for retry_count in range(1, 4):
+    retry_count = 1
+    while retry_count != 4:
         message = None
         try:
             response = requests.get(
@@ -245,7 +246,8 @@ def make_request(rmt_ip_addr, metadata, identifier):
                 'Attempt {}: failed: {}'.format(retry_count, message)
             )
             if 'Timeout' in message:
-                if retry_count == 3:
+                retry_count += 1
+                if retry_count == 4:
                     return
 
                 time.sleep(2)
