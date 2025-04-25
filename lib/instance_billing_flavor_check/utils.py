@@ -215,7 +215,6 @@ def make_request(rmt_ip_addr, metadata, identifier):
     if isinstance(ip_addr, ipaddress.IPv6Address):
         rmt_ip_addr = '[{}]'.format(rmt_ip_addr)
     instance_check_url = 'https://{}/api/instance/check'.format(rmt_ip_addr)
-    message = None
     billing_check_params = {
         'metadata': metadata,
         'identifier': identifier
@@ -223,6 +222,7 @@ def make_request(rmt_ip_addr, metadata, identifier):
     proxies = _get_proxies()
     retry_count = 1
     while retry_count != 4:
+        message = None
         try:
             response = requests.get(
                 instance_check_url,
@@ -248,18 +248,24 @@ def make_request(rmt_ip_addr, metadata, identifier):
             )
             if 'Timeout' in message:
                 retry_count += 1
+                if retry_count == 4:
+                    return
+
                 time.sleep(2)
-            if 'Timeout' in message or retry_count == 4:
-                return
+                continue
+            # error is not time out => return None
+            return
 
         if response.status_code == 200:
             result = response.json()
             logger.debug(result)
             return result.get('flavor')
 
-    logger.error(
-        'Request to check if instance is PAYG/BYOS failed: %s', response.reason
-    )
+        logger.error(
+            'Request to check if instance is PAYG/BYOS failed: %s',
+            response.reason
+        )
+        return
 
 
 def check_payg_byos():
