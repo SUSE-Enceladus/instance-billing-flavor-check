@@ -241,7 +241,7 @@ def make_request(rmt_ip_addr, metadata, identifier):
             message = 'Request error:{}'.format(err)
         except Exception as err:
             message = 'Unexpected error: {}'.format(err)
-    
+
         if message:
             logger.warning(
                 'Attempt {}: failed: {}'.format(retry_count, message)
@@ -270,7 +270,7 @@ def check_payg_byos():
     - (BYOS, 11)
     - (BYOS, 12) Unknown
 
-    When the flavor cannot be reliably determined we declar the instance to be
+    When the flavor cannot be reliably determined we declare the instance to be
     BYOS. That the information is not reliable is indicated by the return code.
     """
     flavour = 'BYOS'
@@ -298,7 +298,7 @@ def check_payg_byos():
             logger.info('Successful server query: {}'.format(flavour))
             _write_cache(flavour)
             return (flavour, code_flavour.get(flavour))
-            
+
     flavour = _get_cache_value()
     logger.info('Using cache value: {}'.format(flavour))
     return (flavour, code_flavour.get(flavour))
