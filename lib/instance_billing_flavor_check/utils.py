@@ -116,7 +116,8 @@ def _get_ips_from_etc_hosts():
             etc_hosts_ip_addr = etc_hosts_line.split()[0]
             try:
                 ipaddress.ip_address(etc_hosts_ip_addr)
-                rmt_ips_addr.append(etc_hosts_ip_addr)
+                if etc_hosts_ip_addr not in rmt_ips_addr:
+                    rmt_ips_addr.append(etc_hosts_ip_addr)
             except ValueError:
                 pass
 
