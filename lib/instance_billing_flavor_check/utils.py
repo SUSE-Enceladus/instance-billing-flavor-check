@@ -242,17 +242,19 @@ def make_request(rmt_ip_addr, metadata, identifier):
             message = 'Unexpected error: {}'.format(err)
 
         if message:
-            logger.warning(
-                'Attempt {}: failed: {}'.format(retry_count, message)
-            )
-            if 'Timeout' in message:
+            if 'Timeout' in message or 'Connecting' in message:
+                logger.warning(
+                    'Attempt {}: failed: {}'.format(retry_count, message)
+                )
                 retry_count += 1
-                if retry_count == 4:
-                    return
-
                 time.sleep(2)
                 continue
+
+            if retry_count == 4:
+                return
+
             # error is not time out => return None
+            logger.warning('Access failed {}'.format(message))
             return
 
         if response.status_code == 200:
