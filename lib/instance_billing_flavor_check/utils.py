@@ -247,11 +247,12 @@ def make_request(rmt_ip_addr, metadata, identifier):
                     'Attempt {}: failed: {}'.format(retry_count, message)
                 )
                 retry_count += 1
+                if retry_count == 4:
+                    return
+
                 time.sleep(2)
                 continue
 
-            if retry_count == 4:
-                return
 
             # error is not time out => return None
             logger.warning('Access failed {}'.format(message))
