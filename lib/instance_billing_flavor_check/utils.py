@@ -253,7 +253,6 @@ def make_request(rmt_ip_addr, metadata, identifier):
                 time.sleep(2)
                 continue
 
-
             # error is not time out => return None
             logger.warning('Access failed {}'.format(message))
             return
