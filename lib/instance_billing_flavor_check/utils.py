@@ -222,6 +222,7 @@ def make_request(rmt_ip_addr, metadata, identifier):
     retry_count = 1
     while retry_count != 4:
         message = None
+        response = None
         try:
             response = requests.get(
                 instance_check_url,
@@ -246,27 +247,26 @@ def make_request(rmt_ip_addr, metadata, identifier):
                 logger.warning(
                     'Attempt {}: failed: {}'.format(retry_count, message)
                 )
-                retry_count += 1
-                if retry_count == 4:
-                    return
-
                 time.sleep(2)
-                continue
+                retry_count += 1
+            else:
+                # error is not time out => return None
+                logger.error(
+                    'Request to check if instance is PAYG/BYOS failed: %s',
+                    message
+                )
+                return
+        elif response:
+            if response.status_code == 200:
+                result = response.json()
+                logger.debug(result)
+                return result.get('flavor')
 
-            # error is not time out => return None
-            logger.warning('Access failed {}'.format(message))
+            logger.error(
+                'Request to check if instance is PAYG/BYOS failed: %s',
+                response.reason
+            )
             return
-
-        if response.status_code == 200:
-            result = response.json()
-            logger.debug(result)
-            return result.get('flavor')
-
-        logger.error(
-            'Request to check if instance is PAYG/BYOS failed: %s',
-            response.reason
-        )
-        return
 
 
 def check_payg_byos():

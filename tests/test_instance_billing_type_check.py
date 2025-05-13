@@ -82,13 +82,11 @@ def test_make_request_ipv6_connection_error(mock_request_get, caplog):
     mock_request_get.side_effect = exceptions.ConnectionError('foo')
     assert utils.make_request(IPV6_ADDR, 'foo', 'bar') is None
     assert 'Error Connecting:foo' in caplog.text
-    mock_request_get.assert_called_once_with(
-        'https://[2001:DB8::1]/api/instance/check',
-        proxies=None,
-        timeout=2,
-        verify=False,
-        params={'metadata': 'foo', 'identifier': 'bar'}
-    )
+    mock_request_get.call_args_list == [
+        call('https://[2001:DB8::1]/api/instance/check', timeout=2, verify=False, params={'metadata': 'foo', 'identifier': 'bar'}, proxies=None),
+        call('https://[2001:DB8::1]/api/instance/check', timeout=2, verify=False, params={'metadata': 'foo', 'identifier': 'bar'}, proxies=None),
+        call('https://[2001:DB8::1]/api/instance/check', timeout=2, verify=False, params={'metadata': 'foo', 'identifier': 'bar'}, proxies=None)
+    ]
 
 
 @patch('instance_billing_flavor_check.utils.requests.get')
@@ -115,7 +113,7 @@ def test_make_request_ipv6_request_error(mock_request_get, caplog):
     response.json.return_value = {'flavor': 'supa flavor'}
     mock_request_get.side_effect = exceptions.RequestException('foo')
     assert utils.make_request(IPV6_ADDR, 'foo', 'bar') is None
-    assert 'Request error:foo' in caplog.text
+    assert 'Request to check if instance is PAYG/BYOS failed' in caplog.text
     mock_request_get.assert_called_once_with(
         'https://[2001:DB8::1]/api/instance/check',
         proxies=None,
@@ -133,7 +131,7 @@ def test_make_request_ipv6_unexpected_error(mock_request_get, caplog):
     response.json.return_value = {'flavor': 'supa flavor'}
     mock_request_get.side_effect = Exception('foo')
     assert utils.make_request(IPV6_ADDR, 'foo', 'bar') is None
-    assert 'Unexpected error: foo' in caplog.text
+    assert 'Request to check if instance is PAYG/BYOS failed' in caplog.text
     mock_request_get.assert_called_once_with(
         'https://[2001:DB8::1]/api/instance/check',
         proxies=None,
