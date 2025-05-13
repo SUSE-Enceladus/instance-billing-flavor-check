@@ -220,6 +220,7 @@ def make_request(rmt_ip_addr, metadata, identifier):
     }
     proxies = _get_proxies()
     retry_count = 1
+    result = {}
     while retry_count != 4:
         message = None
         response = None
@@ -249,24 +250,24 @@ def make_request(rmt_ip_addr, metadata, identifier):
                 )
                 time.sleep(2)
                 retry_count += 1
+                continue
             else:
                 # error is not time out => return None
                 logger.error(
                     'Request to check if instance is PAYG/BYOS failed: %s',
                     message
                 )
-                return
         elif response:
             if response.status_code == 200:
                 result = response.json()
                 logger.debug(result)
-                return result.get('flavor')
+            else:
+                logger.error(
+                    'Request to check if instance is PAYG/BYOS failed: %s',
+                    response.reason
+                )
 
-            logger.error(
-                'Request to check if instance is PAYG/BYOS failed: %s',
-                response.reason
-            )
-            return
+        return result.get('flavor')
 
 
 def check_payg_byos():
@@ -305,7 +306,7 @@ def check_payg_byos():
             logger.info('Successful server query: {}'.format(flavour))
             _write_cache(flavour)
             return (flavour, code_flavour.get(flavour))
-            
+
     flavour = _get_cache_value()
     logger.info('Using cache value: {}'.format(flavour))
     return (flavour, code_flavour.get(flavour))
