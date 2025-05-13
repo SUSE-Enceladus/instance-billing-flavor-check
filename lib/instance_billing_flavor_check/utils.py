@@ -253,7 +253,7 @@ def make_request(rmt_ip_addr, metadata, identifier):
                 continue
             else:
                 # error is not time out => return None
-                logger.error(
+                logger.warning(
                     'Request to check if instance is PAYG/BYOS failed: %s',
                     message
                 )
@@ -262,7 +262,7 @@ def make_request(rmt_ip_addr, metadata, identifier):
                 result = response.json()
                 logger.debug(result)
             else:
-                logger.error(
+                logger.warning(
                     'Request to check if instance is PAYG/BYOS failed: %s',
                     response.reason
                 )
