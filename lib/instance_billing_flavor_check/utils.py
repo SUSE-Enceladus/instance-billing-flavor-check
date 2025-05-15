@@ -252,7 +252,7 @@ def make_request(rmt_ip_addr, metadata, identifier):
                 retry_count += 1
                 continue
             else:
-                # error is not time out => return None
+                # error is not time out or connection => return None
                 logger.warning(
                     'Request to check if instance is PAYG/BYOS failed: %s',
                     message
