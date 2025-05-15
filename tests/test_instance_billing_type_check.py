@@ -15,7 +15,7 @@ import sys
 
 from pytest import raises
 from unittest import mock
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, call
 from requests import exceptions
 from instance_billing_flavor_check import utils
 
@@ -82,13 +82,11 @@ def test_make_request_ipv6_connection_error(mock_request_get, caplog):
     mock_request_get.side_effect = exceptions.ConnectionError('foo')
     assert utils.make_request(IPV6_ADDR, 'foo', 'bar') is None
     assert 'Error Connecting:foo' in caplog.text
-    mock_request_get.assert_called_once_with(
-        'https://[2001:DB8::1]/api/instance/check',
-        proxies=None,
-        timeout=2,
-        verify=False,
-        params={'metadata': 'foo', 'identifier': 'bar'}
-    )
+    mock_request_get.call_args_list == [
+        call('https://[2001:DB8::1]/api/instance/check', timeout=2, verify=False, params={'metadata': 'foo', 'identifier': 'bar'}, proxies=None),
+        call('https://[2001:DB8::1]/api/instance/check', timeout=2, verify=False, params={'metadata': 'foo', 'identifier': 'bar'}, proxies=None),
+        call('https://[2001:DB8::1]/api/instance/check', timeout=2, verify=False, params={'metadata': 'foo', 'identifier': 'bar'}, proxies=None)
+    ]
 
 
 @patch('instance_billing_flavor_check.utils.requests.get')
@@ -100,13 +98,11 @@ def test_make_request_ipv6_timeout_error(mock_request_get, caplog):
     mock_request_get.side_effect = exceptions.Timeout('foo')
     assert utils.make_request(IPV6_ADDR, 'foo', 'bar') is None
     assert 'Timeout Error:foo' in caplog.text
-    mock_request_get.assert_called_once_with(
-        'https://[2001:DB8::1]/api/instance/check',
-        proxies=None,
-        timeout=2,
-        verify=False,
-        params={'metadata': 'foo', 'identifier': 'bar'}
-    )
+    mock_request_get.call_args_list == [
+        call('https://[2001:DB8::1]/api/instance/check', timeout=2, verify=False, params={'metadata': 'foo', 'identifier': 'bar'}, proxies=None),
+        call('https://[2001:DB8::1]/api/instance/check', timeout=2, verify=False, params={'metadata': 'foo', 'identifier': 'bar'}, proxies=None),
+        call('https://[2001:DB8::1]/api/instance/check', timeout=2, verify=False, params={'metadata': 'foo', 'identifier': 'bar'}, proxies=None)
+    ]
 
 
 @patch('instance_billing_flavor_check.utils.requests.get')
@@ -117,7 +113,7 @@ def test_make_request_ipv6_request_error(mock_request_get, caplog):
     response.json.return_value = {'flavor': 'supa flavor'}
     mock_request_get.side_effect = exceptions.RequestException('foo')
     assert utils.make_request(IPV6_ADDR, 'foo', 'bar') is None
-    assert 'Request error:foo' in caplog.text
+    assert 'Request to check if instance is PAYG/BYOS failed' in caplog.text
     mock_request_get.assert_called_once_with(
         'https://[2001:DB8::1]/api/instance/check',
         proxies=None,
@@ -135,7 +131,7 @@ def test_make_request_ipv6_unexpected_error(mock_request_get, caplog):
     response.json.return_value = {'flavor': 'supa flavor'}
     mock_request_get.side_effect = Exception('foo')
     assert utils.make_request(IPV6_ADDR, 'foo', 'bar') is None
-    assert 'Unexpected error: foo' in caplog.text
+    assert 'Request to check if instance is PAYG/BYOS failed' in caplog.text
     mock_request_get.assert_called_once_with(
         'https://[2001:DB8::1]/api/instance/check',
         proxies=None,
@@ -251,9 +247,11 @@ def test_get_ips_from_cloudregister_ipv6_and_ipv4(
 def test_get_rmt_ip_addr_from_cloudregister(
     mock_ips_from_etc_hosts, mock_ips_from_cloudreg
 ):
+    sys.modules['cloudregister'] = mock.MagicMock()
     mock_ips_from_etc_hosts.return_value = None
     mock_ips_from_cloudreg.return_value = ['1.1.1.1']
     assert utils.get_rmt_ip_addr() == ['1.1.1.1']
+    del sys.modules['cloudregister']
 
 
 @patch('instance_billing_flavor_check.utils._get_ips_from_cloudregister')
