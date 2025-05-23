@@ -24,7 +24,7 @@
 
 Summary:        Cloud Billing Flavour Check
 Name:           python-instance-billing-flavor-check
-Version:        1.0.0
+Version:        1.0.1
 Release:        0
 License:        GPL-3.0
 Group:          Productivity/Networking/Web/Utilities
