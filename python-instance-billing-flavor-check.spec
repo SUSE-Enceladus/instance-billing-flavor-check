@@ -1,5 +1,5 @@
 #
-# spec file for package instance-billing-type-check
+# spec file for package python-instance-billing-type-check
 #
 # Copyright (c) 2023 SUSE LINUX GmbH, Nuernberg, Germany.
 #
@@ -20,9 +20,8 @@
 %else
 %define pythons python3
 %endif
-%global _sitelibdir %{%{pythons}_sitelib}
 
-Summary:        Cloud Billing Flavour Check
+Summary:        Cloud Billing Flavor Check
 Name:           python-instance-billing-flavor-check
 Version:        1.0.1
 Release:        0
@@ -36,6 +35,10 @@ Requires:       %{pythons}-lxml
 Requires:       %{pythons}-requests
 Requires:       cloud-regionsrv-client >= 10.2.0
 BuildRequires:  %{pythons}-setuptools
+%if 0%{?suse_version} >= 1600
+BuildRequires:  %{pythons}-pip
+BuildRequires:  %{pythons}-wheel
+%endif
 BuildRequires:  python-rpm-macros
 
 %description
@@ -45,10 +48,19 @@ Check if instance is PAYG or BYOS
 %setup -q
 
 %build
-python3 setup.py build
+%if 0%{?suse_version} >= 1600
+%pyproject_wheel
+%else
+%{pythons} setup.py build
+%endif
+
 
 %install
-python3 setup.py install --prefix=%{_prefix}  --root=%{buildroot}
+%if 0%{?suse_version} >= 1600
+%pyproject_install
+%else
+%{pythons} setup.py install --prefix=%{_prefix}  --root=%{buildroot}
+%endif
 
 %files
 %doc README.md
