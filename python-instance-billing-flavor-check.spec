@@ -24,7 +24,7 @@
 
 Summary:        Cloud Billing Flavour Check
 Name:           python-instance-billing-flavor-check
-Version:        1.0.1
+Version:        1.0.2
 Release:        0
 License:        GPL-3.0
 Group:          Productivity/Networking/Web/Utilities
@@ -37,6 +37,10 @@ Requires:       %{pythons}-requests
 Requires:       cloud-regionsrv-client >= 10.2.0
 BuildRequires:  %{pythons}-setuptools
 BuildRequires:  python-rpm-macros
+%if 0%{?suse_version} >= 1600
+BuildRequires:  %{pythons}-pip
+BuildRequires:  %{pythons}-wheel
+%endif
 
 %description
 Check if instance is PAYG or BYOS
@@ -45,10 +49,18 @@ Check if instance is PAYG or BYOS
 %setup -q
 
 %build
-python3 setup.py build
+%if 0%{?suse_version} >= 1600
+%pyproject_wheel
+%else
+%{pythons} setup.py build
+%endif
 
 %install
-python3 setup.py install --prefix=%{_prefix}  --root=%{buildroot}
+%if 0%{?suse_version} >= 1600
+%pyproject_install
+%else
+%{pythons} setup.py install --prefix=%{_prefix}  --root=%{buildroot}
+%endif
 
 %files
 %doc README.md
