@@ -18,8 +18,13 @@
 %if 0%{?suse_version} >= 1600
 %define pythons %{primary_python}
 %else
+%if 0%{?suse_version} > 1315
+%define pythons python311
+%else
 %define pythons python3
 %endif
+%endif
+%global _sitelibdir %{%{pythons}_sitelib}
 
 Summary:        Cloud Billing Flavor Check
 Name:           python-instance-billing-flavor-check
@@ -33,13 +38,22 @@ BuildRoot:      %{_tmppath}/%{name}-%{version}-%{release}-root
 Requires:       %{pythons}
 Requires:       %{pythons}-lxml
 Requires:       %{pythons}-requests
-Requires:       cloud-regionsrv-client >= 10.2.0
+Requires:       cloud-regionsrv-client >= 10.5.3
+%if 0%{?suse_version} > 1315
+BuildRequires:  %{pythons}-pip
+BuildRequires:  %{pythons}-wheel
+%endif
 BuildRequires:  %{pythons}-setuptools
 %if 0%{?suse_version} >= 1600
 BuildRequires:  %{pythons}-pip
 BuildRequires:  %{pythons}-wheel
 %endif
 BuildRequires:  python-rpm-macros
+# We need to make sure there is a cloud-regionsrv-client version that is
+# also built with Python 3.11
+%if 0%{?suse_version} > 1315 && 0%{?suse_version} < 1600
+Conflicts:       cloud-regionsrv-client < 10.5.4
+%endif
 
 %description
 Check if instance is PAYG or BYOS
@@ -48,18 +62,19 @@ Check if instance is PAYG or BYOS
 %setup -q
 
 %build
-%if 0%{?suse_version} >= 1600
+%if 0%{?suse_version} > 1315
 %pyproject_wheel
 %else
 %{pythons} setup.py build
 %endif
 
 
+
 %install
-%if 0%{?suse_version} >= 1600
+%if 0%{?suse_version} > 1315
 %pyproject_install
 %else
-%{pythons} setup.py install --prefix=%{_prefix}  --root=%{buildroot}
+%{pythons} setup.py install --prefix=%{_prefix} --root=%{buildroot}
 %endif
 
 %files
