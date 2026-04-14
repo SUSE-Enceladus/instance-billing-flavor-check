@@ -128,10 +128,13 @@ def _get_ips_from_cloudregister(): # pragma: no cover
     # get a new RMT IP
     server = get_smt(False)
     rmt_ips_addr = []
-    if has_ipv6_access() and server.get_ipv6():
-        rmt_ips_addr.append('[{}]'.format(server.get_ipv6()))
-    if has_ipv4_access():
-        rmt_ips_addr.append(server.get_ipv4())
+    if not server:
+        logger.info('Can not reach the update infrastructure')
+    else:
+        if has_ipv6_access() and server.get_ipv6():
+            rmt_ips_addr.append('[{}]'.format(server.get_ipv6()))
+        if has_ipv4_access():
+            rmt_ips_addr.append(server.get_ipv4())
 
     return rmt_ips_addr
 
@@ -296,8 +299,12 @@ def check_payg_byos():
 
     rmt_ips_addr = get_rmt_ip_addr()
     if not rmt_ips_addr:
-        logger.warning('Instance can be either BYOS or PAYG and not registered')
-        _write_cache(flavour)
+        if not os.path.exists(CACHE_FILE_PATH):
+            logger.warning('Instance can be either BYOS or PAYG and not registered')
+            _write_cache(flavour)
+        else:
+           flavour = _get_cache_value()
+
         return (flavour, 12)
 
     code_flavour = {'PAYG': 10, 'BYOS': 11}
